@@ -60,6 +60,31 @@ namespace BotOnWebApp.Services
             return (userMap.Count() > 0) ? userMap.ElementAt<UserMappings>(0).AccessToken : null;
         }
 
+        public static bool ForgetUserToken(string key)
+        {
+            string connstring = CloudConfigurationManager.GetSetting("AzureWebJobsStorage");
+            var storageAccount = CloudStorageAccount.Parse(connstring);
+            var tableClient = storageAccount.CreateCloudTableClient();
+            var table = tableClient.GetTableReference("BotMappings");
+
+            // Create the table query.
+            var rangeQuery = new TableQuery<UserMappings>().Where(
+                TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "MSFT"),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("Key", QueryComparisons.Equal, key)));
+
+            var userMap = table.ExecuteQuery(rangeQuery);
+            if (userMap.Count() > 0)
+            {
+                TableOperation deleteOperation = TableOperation.Delete(userMap.ElementAt<UserMappings>(0));
+                var r = table.Execute(deleteOperation);
+                return (r.Result != null);
+            }
+
+            return false;
+        }
+
         public static UserMappings GetUserRow(string userid)
         {
             string connstring = CloudConfigurationManager.GetSetting("AzureWebJobsStorage");

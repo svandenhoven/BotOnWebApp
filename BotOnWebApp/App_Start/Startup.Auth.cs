@@ -55,7 +55,7 @@ namespace BotOnWebApp
                             //string signedInUserID = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
                             string signedInUserID = context.AuthenticationTicket.Identity.Name;
-                            AuthenticationContext authContext = new AuthenticationContext(aadInstance + tenantID, new ADALTokenCache(signedInUserID));
+                            AuthenticationContext authContext = new AuthenticationContext(aadInstance + tenantID, false);
                             AuthenticationResult result = authContext.AcquireTokenByAuthorizationCode(
                                 code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), credential, graphResourceID);
 
@@ -64,7 +64,7 @@ namespace BotOnWebApp
                             return Task.FromResult(0);
                         },
                         AuthenticationFailed = (context) =>
-                        {
+                        { 
                             context.OwinContext.Response.Redirect("/Home/Error"); ;
                             context.HandleResponse(); // Suppress the exception
                             return Task.FromResult(0);
